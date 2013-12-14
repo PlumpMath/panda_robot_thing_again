@@ -4,7 +4,6 @@ from keyListener import KeyListener
 from libpanda import Mat3
 from pandac.PandaModules import  Vec3D, BitMask32, CardMaker, Vec4, Quat, OdeBody, OdeMass, OdeBoxGeom, OdePlaneGeom, OdeWorld,OdeSimpleSpace,OdeJointGroup,OdeSphereGeom, OdeHinge2Joint,Texture
 from random import randint, random
-from myModel import MyModel
 
 from ModelCreator import ModelCreator
 from direct.gui.OnscreenText import OnscreenText
