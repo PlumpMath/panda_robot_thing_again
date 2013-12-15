@@ -4,8 +4,8 @@ from direct.directbase import DirectStart
 from direct.showbase.Loader import Loader
 from keyListener import KeyListener
 from libpanda import Mat3
-from pandac.PandaModules import  Vec3D, BitMask32, CardMaker, Vec4, Quat, OdeBody, OdeMass, OdeBoxGeom, OdePlaneGeom, OdeWorld,OdeSimpleSpace,OdeJointGroup,OdeSphereGeom, OdeHinge2Joint,Texture
-from random import randint, random
+from pandac.PandaModules import Quat, OdeWorld, OdeSimpleSpace, OdeJointGroup
+from random import randint
 
 from ModelCreator import ModelCreator
 from direct.gui.OnscreenText import OnscreenText
@@ -13,8 +13,11 @@ from shadowManager import ShadowManager
 from entityCreator import EntityCreator
 chassis = None
 camera_targets = []
+sMgr = None
+
 
 def setup_shadows():
+    global sMgr
     sMgr = ShadowManager(render)
     sMgr.setAmbient(0.2)     # Most of these five are the default
     sMgr.setHardness(20)     # values so it was kinda unnecessary to
@@ -66,6 +69,7 @@ def physics_tick():
 def update_camera():
     for target in camera_targets:
         base.cam.lookAt(target.get_pos())
+        sMgr.light.lookAt(target.get_pos())
 
 def update_gui():
     global text

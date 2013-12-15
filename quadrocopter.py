@@ -3,7 +3,7 @@ Created on 23/01/2011
 
 @author: Will
 '''
-from pandac.PandaModules import Vec2D , VBase3
+from pandac.PandaModules import Vec2D , VBase3, LMatrix3
 import libpanda
 import math
 import keyListener
@@ -87,12 +87,25 @@ class Quadrocopter():
             return 6
         else:
             return r
-        
+
+    def set_pos(self,x,y,z,roll,pitch,yaw):
+        #print self.objects
+        for i in self.objects:
+            #i[1].setPosition(0,0,3)
+            i[1].setLinearVel(0,0,0)
+            i[1].set_angular_vel(0,0,0)
+            i[1].set_rotation(LMatrix3.ident_mat())
+
+
+        self.chassiM.body.setPosition(0,0,3)
+        self.chassiM.body.setLinearVel(0,0,0)
+        # self.chassiM.body.set_angular_vel(0,0,0)
+        # self.chassiM.body.set_rotation(LMatrix3.ident_mat())
+        #print dir(self.chassiM.body)
+
     
         
     def getRRThrust(self):
-        
-        
         yaw = self.getYaw()
         yawVel = self.getYawVel()
         roll = self.getRoll()
@@ -134,10 +147,12 @@ class Quadrocopter():
             base = base - DIFFERENTIAL * yaw
         
         return base
-    
+
+
+
+
     def getFLThrust(self):        
              
-        
         yaw = self.getYaw()
         yawVel = self.getYawVel()
         roll = self.getRoll()
@@ -186,3 +201,5 @@ class Quadrocopter():
             self.turnLeft()
         if self.key_listener.keys['space']:
             self.goUp()
+        if self.key_listener.keys['x']:
+            self.set_pos(0,0,0,0,0,0)

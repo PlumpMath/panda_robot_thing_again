@@ -1,5 +1,6 @@
 from direct.directbase import DirectStart
 from direct.showbase.Loader import Loader
+from predef import *
 from keyListener import KeyListener
 from libpanda import Mat3
 from pandac.PandaModules import  Vec3D, BitMask32, CardMaker, Vec4, Quat, OdeBody, OdeMass, OdeBoxGeom, OdePlaneGeom, OdeWorld,OdeSimpleSpace,OdeJointGroup,OdeSphereGeom, OdeHinge2Joint,Texture
