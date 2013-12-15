@@ -40,6 +40,7 @@ def create_general_balls():
 
 # The task for our simulation'
 def simulationTask(task):
+
     if vehicle != None and vehicle.chassiM != None:
         base.cam.lookAt(vehicle.chassiM.model)
     global text

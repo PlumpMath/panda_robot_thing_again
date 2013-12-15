@@ -17,8 +17,6 @@ class ModelCreator():
     def createSphere(self,world,space,density = 1,scale = 1):
         sphere = loader.loadModel("smiley.egg")
         sphere.setPos(0, 0, 10)
-        #sphere.setColor(0.7, 0.4, 0.4)
-        # create body
         sphere.setScale(scale)
         body = OdeBody(world)
         M = OdeMass()
@@ -114,8 +112,6 @@ class ModelCreator():
         model.size = size
         model.center = center
         return model
-
-
 
     def createQuadro(self,world,space,density = 10):
         # Setup the geometry

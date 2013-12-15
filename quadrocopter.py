@@ -6,11 +6,13 @@ Created on 23/01/2011
 from pandac.PandaModules import Vec2D , VBase3
 import libpanda
 import math
- 
+import keyListener
+
 BASE = 35
-DIFERENTIAL = 1000
+DIFFERENTIAL = 1000
 class Quadrocopter():
     def __init__(self):
+        self.key_listener = keyListener.get_instance()
         self.jointrr = None
         self.rrwheel = None
         self.jointrl = None
@@ -26,7 +28,10 @@ class Quadrocopter():
         lista = []
         lista.extend([self.rrwheel.model,self.frwheel.model,self.flwheel.model,self.rlwheel.model,self.chassiM.model])
         return lista
-    
+
+    def get_pos(self):
+        return self.chassiM.model.get_pos()
+
     def setRRWheel(self,jointrr,rrwheel):
         self.jointrr = jointrr
         self.rrwheel = rrwheel
@@ -94,10 +99,10 @@ class Quadrocopter():
         base = BASE    
         rollVel = self.getRollVel()
         if roll < 0 and rollVel < 0:
-            base = base - DIFERENTIAL * roll
+            base = base - DIFFERENTIAL * roll
             print "rr on"
         if yaw < 0 and yawVel < 0:
-            base = base + DIFERENTIAL * yaw
+            base = base + DIFFERENTIAL * yaw
         return base
         
     def getRLThrust(self):     
@@ -108,10 +113,10 @@ class Quadrocopter():
         base = BASE    
         rollVel = self.getRollVel()         
         if roll > 0 and rollVel > 0:
-            base = base - DIFERENTIAL * roll
+            base = base - DIFFERENTIAL * roll
             pass
         if yaw < 0 and yawVel < 0:
-            base = base + DIFERENTIAL * yaw
+            base = base + DIFFERENTIAL * yaw
         
         return base
             
@@ -123,10 +128,10 @@ class Quadrocopter():
         base = BASE    
         rollVel = self.getRollVel()         
         if roll < 0 and rollVel < 0:
-            base = base + DIFERENTIAL * roll
+            base = base + DIFFERENTIAL * roll
             pass
         if yaw > 0 and yawVel > 0:
-            base = base - DIFERENTIAL * yaw
+            base = base - DIFFERENTIAL * yaw
         
         return base
     
@@ -139,10 +144,10 @@ class Quadrocopter():
         base = BASE    
         rollVel = self.getRollVel()         
         if roll > 0 and rollVel > 0:
-            base = base - DIFERENTIAL * roll
+            base = base - DIFFERENTIAL * roll
             pass
         if yaw > 0 and yawVel > 0:
-            base = base - DIFERENTIAL * yaw
+            base = base - DIFFERENTIAL * yaw
         
         return base
 
@@ -154,13 +159,9 @@ class Quadrocopter():
     
     def goForward(self):
         
-        
         self.rlwheel.body.addRelForce(0,0,100)
         self.rrwheel.body.addRelForce(0,0,100)
- 
-        
-        
-        
+
     def goBackwards(self):
         
         self.frwheel.body.addRelForce(0,0,100)        
@@ -173,4 +174,15 @@ class Quadrocopter():
     def turnRight(self):
         self.rrwheel.body.addRelForce(0,0,100)        
         self.frwheel.body.addRelForce(0,0,100)
-        
+
+    def tick(self):
+        if self.key_listener.keys['i']:
+            self.goForward()
+        if self.key_listener.keys['k']:
+            self.goBackwards()
+        if self.key_listener.keys['l']:
+            self.turnRight()
+        if self.key_listener.keys['j']:
+            self.turnLeft()
+        if self.key_listener.keys['space']:
+            self.goUp()

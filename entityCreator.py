@@ -135,7 +135,7 @@ class EntityCreator():
         #player = playerM.body
         #objects.append([playerM.model,playerM.body])
         
-        frwheel = modelcreator.createSphere(world,space,density = 0.1)        
+        frwheel = modelcreator.createSphere(world,space,density = 0.1)
         objects.append([frwheel.model,frwheel.body])
         flwheel = modelcreator.createSphere(world,space,density = 0.1)
         objects.append([flwheel.model,flwheel.body])
