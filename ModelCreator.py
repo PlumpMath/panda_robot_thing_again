@@ -5,150 +5,108 @@ Created on 30/07/2009
 '''
 from direct.directbase import DirectStart
 from direct.showbase.Loader import Loader
-from keyListener import KeyListener
-from pandac.PandaModules import OdeBody, OdeMass, OdeSphereGeom, BitMask32, OdeBoxGeom
+from pandac.libpandaModules import Vec3
+from pandac.PandaModules import Texture
+from pandac.PandaModules import GeoMipTerrain
+from Entities.basePhysicalObject import BasePhysicalObject
+from Entities.map import Map
+from panda3d.bullet import BulletRigidBodyNode, BulletBoxShape, BulletSphereShape, BulletPlaneShape
 
-from random import randint, random
-from myModel import MyModel
+from panda3d.core import Filename
+from panda3d.core import PNMImage
+from panda3d.bullet import BulletHeightfieldShape
+from panda3d.bullet import ZUp
+
+instance = None
+
+
+def get_instance(world=None):
+    global instance
+    if instance:
+        return instance
+    else:
+        print "created"
+        instance = ModelCreator(world)
+        return instance
 
 
 class ModelCreator():
-    
-    def createSphere(self,world,space,density = 1,scale = 1):
-        sphere = loader.loadModel("smiley.egg")
-        sphere.setPos(0, 0, 10)
-        sphere.setScale(scale)
-        body = OdeBody(world)
-        M = OdeMass()
-        M.setSphere(density, scale)
-        body.setMass(M)
-        body.setPosition(sphere.getPos(render))
-        body.setQuaternion(sphere.getQuat(render))
-        global player
-        player = body
-        bodyNP = sphere.copyTo(render)
-        bodyNP.setColor(random(), random(), random(), 1)
+    def __init__(self, world=None):
+        if world:
+            self.world = world
 
-        bodyaGeom = OdeSphereGeom(space,scale)
-        bodyaGeom.setCollideBits(BitMask32(0x00000001))
-        bodyaGeom.setCategoryBits(BitMask32(0x00000001))
-        bodyaGeom.setBody(body)
-        
-        model = MyModel()
-        model.body = body
-        model.model = bodyNP
-        return model
+    def createSphere(self, world, mass=1, scale=1):
+        shape = BulletSphereShape(scale)
+        node = BulletRigidBodyNode('Sphere')
+        node.setMass(mass)
+        node.addShape(shape)
+        #np = render.attachNewNode(node)
+        #np.setPos(0, 0, 4)
+        world.attachRigidBody(node)
+        model = loader.loadModel('models/smiley.egg')
+
+        model.setScale(scale)
+        #model.setPos(-scale[0],-scale[1],-scale[2])
+        model.flattenLight()
+        #model.reparentTo(np)
+        return BasePhysicalObject(model,node)
 
 
+    def createBox(self, mass=5, scale=(1, 1, 1)):
+        shape = BulletBoxShape(Vec3(*scale))
+        node = BulletRigidBodyNode('Box')
+        node.setMass(mass)
+        node.addShape(shape)
+        #np = render.attachNewNode(node)
+        #np.setPos(0, 0, 2)
+        self.world.attachRigidBody(node)
+        model = loader.loadModel('models/box.egg')
+        scalex2 = []
+        for item in scale:
+            scalex2.append(item * 2)
+        model.setScale(*scalex2)
+        model.setPos(-scale[0], -scale[1], -scale[2])
+        model.flattenLight()
+        #model.reparentTo(np)
+        return BasePhysicalObject(model,node)
 
-    def createBox(self,world,space,density = 10, scale = (1,1,1)):
-        # Setup the geometry
-        box = loader.loadModel("box.egg")
-        
-        # Make sure its center is at 0, 0, 0 like OdeBoxGeom
-        box.setPos(-.5, -.5, -.5)
-        box.flattenLight() # Apply transform
-        box.setScale(scale)
+    def createMap(self):
 
-        
-        boxNP = box.copyTo(render)
-        #boxNP.setPos(randint(-10, 10), randint(-10, 10), 10 + random())
-        boxNP.setColor(random(), random(), random(), 1)
-        #boxNP.setHpr(randint(-45, 45), randint(-45, 45), randint(-45, 45))
-        # Create the body and set the mass
-        boxBody = OdeBody(world)
-        M = OdeMass()
-        M.setBox(density,scale[0],scale[1],scale[2])
-        boxBody.setMass(M)
-        boxBody.setPosition(boxNP.getPos(render))
-        boxBody.setQuaternion(boxNP.getQuat(render))
-        # Create a BoxGeom
-        boxGeom = OdeBoxGeom(space,scale[0],scale[1],scale[2])
-        boxGeom.setCollideBits(BitMask32(0x00000001))
-        boxGeom.setCategoryBits(BitMask32(0x00000001))
-        boxGeom.setBody(boxBody)
-        
-        model = MyModel()
-        model.body = boxBody
-        model.model = boxNP
+        height = 10.0
+        img = PNMImage(Filename('resources/map1.bmp'))
+        shape = BulletHeightfieldShape(img, height, ZUp)
+        node = BulletRigidBodyNode('Map')
+        node.setMass(99999999)
+        node.addShape(shape)
+        self.world.attachRigidBody(node)
+        offset = img.getXSize() / 2.0 - 0.5
+        terrain = GeoMipTerrain('terrain')
+        terrain.setHeightfield(img)
+        terrainNP = terrain.getRoot()
+        terrainNP.setSz(height)
+        terrainNP.setPos(-offset, -offset, -height / 2.0)
+        #terrain.setColorMap('resources/map1color.bmp')
+        terrain.setAutoFlatten(GeoMipTerrain.AFMOff)
+        terrain.generate()
+
+        return Map(terrainNP,node)
 
 
-        return model
 
-    def createCar(self,world,space,density = 10):
-        # Setup the geometry
-        box = loader.loadModel("box.egg")
-        scale = 4
-        box.setScale(scale)
-        min, max = box.getTightBounds()
-        size = max-min
-        center = (min + max)/2 
-        print size
-        # Make sure its center is at 0, 0, 0 like OdeBoxGeom
-        box.setPos(-.5*scale, -.5*scale, -.2*scale)
-        box.flattenLight() # Apply transform
-        box.setTextureOff()
-        
-        boxNP = box.copyTo(render)
-        #boxNP.setPos(randint(-10, 10), randint(-10, 10), 10 + random())
-        boxNP.setColor(random(), random(), random(), 1)
-        #boxNP.setHpr(randint(-45, 45), randint(-45, 45), randint(-45, 45))
-        # Create the body and set the mass
-        boxBody = OdeBody(world)
-        M = OdeMass()
-        M.setBox(density,size.getX(),size.getY(),size.getZ())
-        boxBody.setMass(M)
-        boxBody.setPosition(boxNP.getPos(render))
-        boxBody.setQuaternion(boxNP.getQuat(render))
-        # Create a BoxGeom
-        boxGeom = OdeBoxGeom(space,size.getX(),size.getY(),size.getZ())
-        boxGeom.setCollideBits(BitMask32(0x00000001))
-        boxGeom.setCategoryBits(BitMask32(0x00000001))
-        boxGeom.setBody(boxBody)
-        
-        model = MyModel()
-        model.body = boxBody
-        model.model = boxNP
-        model.size = size
-        model.center = center
-        return model
+    def createGround(self):
+        shape = BulletPlaneShape(Vec3(0, 0, 1), 1)
+        node = BulletRigidBodyNode('Ground')
+        node.addShape(shape)
+        np = render.attachNewNode(node)
+        np.setPos(0, 0, -2)
+        self.world.attachRigidBody(node)
 
-    def createQuadro(self,world,space,density = 10):
-        # Setup the geometry
-        box = loader.loadModel("box.egg")
-        scale = 1
-        box.setScale(scale)
-        min, max = box.getTightBounds()
-        size = max-min
-        center = (min + max)/2 
-        print size
-        # Make sure its center is at 0, 0, 0 like OdeBoxGeom
-        box.setPos(-.5*scale, -.5*scale, -.2*scale)
-        box.flattenLight() # Apply transform
-        box.setTextureOff()
-        
-        boxNP = box.copyTo(render)
-        #boxNP.setPos(randint(-10, 10), randint(-10, 10), 10 + random())
-        boxNP.setColor(random(), random(), random(), 1)
-        #boxNP.setHpr(randint(-45, 45), randint(-45, 45), randint(-45, 45))
-        # Create the body and set the mass
-        boxBody = OdeBody(world)
-        M = OdeMass()
-        M.setBox(density,size.getX(),size.getY(),size.getZ())
-        boxBody.setMass(M)
-        boxBody.setPosition(boxNP.getPos(render))
-        boxBody.setQuaternion(boxNP.getQuat(render))
-        # Create a BoxGeom
-        boxGeom = OdeBoxGeom(space,size.getX(),size.getY(),size.getZ())
-        boxGeom.setCollideBits(BitMask32(0x00000001))
-        boxGeom.setCategoryBits(BitMask32(0x00000001))
-        boxGeom.setBody(boxBody)
-        
-        model = MyModel()
-        model.body = boxBody
-        model.model = boxNP
-        model.size = size
-        model.center = center
-        return model
+        table = loader.loadModel("tableplane.egg")
+        table.reparentTo(np)
+        tableTex = loader.loadTexture("tree-bark-89a.jpg")
+        tableTex.setMinfilter(Texture.FTLinearMipmapLinear) # Enable texture mipmapping
+        table.setTexture(tableTex)
+        table.setPos(0,0,-0.1)
+        table.setScale(2) # fucks the shadows
 
 
