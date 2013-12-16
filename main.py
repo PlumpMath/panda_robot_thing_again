@@ -6,7 +6,7 @@ from libpanda import Mat3
 from pandac.PandaModules import  Vec3D, BitMask32, CardMaker, Vec4, Quat, OdeBody, OdeMass, OdeBoxGeom, OdePlaneGeom, OdeWorld,OdeSimpleSpace,OdeJointGroup,OdeSphereGeom, OdeHinge2Joint,Texture
 from random import randint, random
 
-from ModelCreator import ModelCreator
+from modelCreator import ModelCreator
 from direct.gui.OnscreenText import OnscreenText
 from shadowManager import ShadowManager
 from entityCreator import EntityCreator

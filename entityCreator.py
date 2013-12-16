@@ -6,7 +6,7 @@ Created on 23/01/2011
 
 from p3d import *
 from pandac.PandaModules import Texture , OdePlaneGeom, Vec4, BitMask32, OdeHinge2Joint,OdeFixedJoint
-from ModelCreator import ModelCreator
+from modelCreator import ModelCreator
 from quadrocopter import Quadrocopter
 from car import Car
 

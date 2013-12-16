@@ -1,19 +1,32 @@
 __author__ = 'Will'
 
-from direct.directbase import DirectStart
-from direct.showbase.Loader import Loader
+
+import direct.directbase.DirectStart
 from keyListener import KeyListener
 from libpanda import Mat3
 from pandac.PandaModules import Quat, OdeWorld, OdeSimpleSpace, OdeJointGroup
 from random import randint
-
-from ModelCreator import ModelCreator
+from panda3d.bullet import BulletWorld
+import modelCreator
+from quadrocopter import Quadrocopter
 from direct.gui.OnscreenText import OnscreenText
 from shadowManager import ShadowManager
-from entityCreator import EntityCreator
+from bulletEntityCreator import BulletEntityCreator
 chassis = None
 camera_targets = []
 sMgr = None
+
+
+
+from panda3d.bullet import BulletDebugNode
+
+debugNode = BulletDebugNode('Debug')
+debugNode.showWireframe(True)
+debugNode.showConstraints(True)
+debugNode.showBoundingBoxes(True)
+debugNode.showNormals(True)
+debugNP = render.attachNewNode(debugNode)
+debugNP.show()
 
 
 def setup_shadows():
@@ -38,38 +51,23 @@ def setup_camera():
 
 def setup_physics():
     global world
-    global space
-    global contactgroup
-    world = OdeWorld()
+    world = BulletWorld()
+    world.setDebugNode(debugNP.node())
     world.setGravity(0, 0, -9.81)
-    # The surface table is needed for autoCollide
-    world.initSurfaceTable(1)
-    world.setSurfaceEntry(0, 0, 15000, 0.001, 0.9, 0.9, 0.00001, 0.1, 0.002)
-    # Create a space and add a contactgroup to it to add the contact joints
-    space = OdeSimpleSpace()
-    space.setAutoCollideWorld(world)
-    contactgroup = OdeJointGroup()
-    space.setAutoCollideJointGroup(contactgroup)
 
 
-def create_general_balls():
-    for i in range(10):
-        # Setup the geometry
-        temp = modelcreator.createSphere(world, space)
-        temp.body.setPosition(randint(-15,15),randint(-15,15),randint(10,55))
-        physical_objects.append((temp.model, temp.body))
+def physics_tick(task):
+    dt = globalClock.getDt()
+    world.doPhysics(dt)
+    return task.cont
 
-def physics_tick():
-    space.autoCollide()
-    world.quickStep(globalClock.getDt())
-    for np, body in physical_objects:
-        np.setPosQuat(render, body.getPosition(), Quat(body.getQuaternion()))
-    contactgroup.empty()
 
 def update_camera():
     for target in camera_targets:
+        #print dir(target)
         base.cam.lookAt(target.get_pos())
         sMgr.light.lookAt(target.get_pos())
+
 
 def update_gui():
     global text
@@ -82,7 +80,7 @@ def simulationTask(task):
     update_camera()
     update_gui()
     vehicle.tick()
-    physics_tick()
+    physics_tick(task)
     return task.cont
 
 
@@ -90,16 +88,16 @@ if __name__ == "__main__":
     setup_physics()
     setup_shadows()
     setup_camera()
-
-    entityCreator = EntityCreator(space, world)
+    modelCreator.get_instance(world)
+    entityCreator = BulletEntityCreator(world)
     key_listener = KeyListener()
-    vehicle = entityCreator.createQuadrocopter()
+    vehicle = Quadrocopter(world)
     camera_targets.append(vehicle)
     table = entityCreator.createGround()
 
     #############must hide this!############
-    physical_objects = []
-    physical_objects.extend(vehicle.objects)
+    #physical_objects = []
+    #physical_objects.extend(vehicle.objects)
     ########################################
     text = OnscreenText("")
 
